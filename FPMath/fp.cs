@@ -13,7 +13,7 @@ namespace FPMath
     [Serializable]
     public partial struct fp : IEquatable<fp>, IComparable<fp>
     {
-        readonly long m_rawValue;
+        readonly long _rawValue;
 
         // Precision of this type is 2^-32, that is 2,3283064365386962890625E-10
         public static readonly decimal Precision = (decimal)(new fp(1L));//0.00000000023283064365386962890625m;
@@ -54,8 +54,8 @@ namespace FPMath
         public static int Sign(fp value)
         {
             return
-                value.m_rawValue < 0 ? -1 :
-                value.m_rawValue > 0 ? 1 :
+                value._rawValue < 0 ? -1 :
+                value._rawValue > 0 ? 1 :
                 0;
         }
 
@@ -66,14 +66,14 @@ namespace FPMath
         /// </summary>
         public static fp Abs(fp value)
         {
-            if (value.m_rawValue == MIN_VALUE)
+            if (value._rawValue == MIN_VALUE)
             {
                 return MaxValue;
             }
 
             // branchless implementation, see http://www.strchr.com/optimized_abs_function
-            var mask = value.m_rawValue >> 63;
-            return new fp((value.m_rawValue + mask) ^ mask);
+            var mask = value._rawValue >> 63;
+            return new fp((value._rawValue + mask) ^ mask);
         }
 
         /// <summary>
@@ -83,8 +83,8 @@ namespace FPMath
         public static fp FastAbs(fp value)
         {
             // branchless implementation, see http://www.strchr.com/optimized_abs_function
-            var mask = value.m_rawValue >> 63;
-            return new fp((value.m_rawValue + mask) ^ mask);
+            var mask = value._rawValue >> 63;
+            return new fp((value._rawValue + mask) ^ mask);
         }
 
 
@@ -94,7 +94,7 @@ namespace FPMath
         public static fp Floor(fp value)
         {
             // Just zero out the fractional part
-            return new fp((long)((ulong)value.m_rawValue & 0xFFFFFFFF00000000));
+            return new fp((long)((ulong)value._rawValue & 0xFFFFFFFF00000000));
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace FPMath
         /// </summary>
         public static fp Ceiling(fp value)
         {
-            var hasFractionalPart = (value.m_rawValue & 0x00000000FFFFFFFF) != 0;
+            var hasFractionalPart = (value._rawValue & 0x00000000FFFFFFFF) != 0;
             return hasFractionalPart ? Floor(value) + One : value;
         }
 
@@ -112,7 +112,7 @@ namespace FPMath
         /// </summary>
         public static fp Round(fp value)
         {
-            var fractionalPart = value.m_rawValue & 0x00000000FFFFFFFF;
+            var fractionalPart = value._rawValue & 0x00000000FFFFFFFF;
             var integralPart = Floor(value);
             if (fractionalPart < 0x80000000)
             {
@@ -124,7 +124,7 @@ namespace FPMath
             }
             // if number is halfway between two values, round to the nearest even number
             // this is the method used by System.Math.Round().
-            return (integralPart.m_rawValue & ONE) == 0
+            return (integralPart._rawValue & ONE) == 0
                        ? integralPart
                        : integralPart + One;
         }
@@ -135,8 +135,8 @@ namespace FPMath
         /// </summary>
         public static fp operator +(fp x, fp y)
         {
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
+            var xl = x._rawValue;
+            var yl = y._rawValue;
             var sum = xl + yl;
             // if signs of operands are equal and signs of sum and x are different
             if (((~(xl ^ yl) & (xl ^ sum)) & MIN_VALUE) != 0)
@@ -151,7 +151,7 @@ namespace FPMath
         /// </summary>
         public static fp FastAdd(fp x, fp y)
         {
-            return new fp(x.m_rawValue + y.m_rawValue);
+            return new fp(x._rawValue + y._rawValue);
         }
 
         /// <summary>
@@ -160,8 +160,8 @@ namespace FPMath
         /// </summary>
         public static fp operator -(fp x, fp y)
         {
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
+            var xl = x._rawValue;
+            var yl = y._rawValue;
             var diff = xl - yl;
             // if signs of operands are different and signs of sum and x are different
             if ((((xl ^ yl) & (xl ^ diff)) & MIN_VALUE) != 0)
@@ -176,7 +176,7 @@ namespace FPMath
         /// </summary>
         public static fp FastSub(fp x, fp y)
         {
-            return new fp(x.m_rawValue - y.m_rawValue);
+            return new fp(x._rawValue - y._rawValue);
         }
 
         static long AddOverflowHelper(long x, long y, ref bool overflow)
@@ -190,8 +190,8 @@ namespace FPMath
         public static fp operator *(fp x, fp y)
         {
 
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
+            var xl = x._rawValue;
+            var yl = y._rawValue;
 
             var xlo = (ulong)(xl & 0x00000000FFFFFFFF);
             var xhi = xl >> FRACTIONAL_PLACES;
@@ -272,8 +272,8 @@ namespace FPMath
         public static fp FastMul(fp x, fp y)
         {
 
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
+            var xl = x._rawValue;
+            var yl = y._rawValue;
 
             var xlo = (ulong)(xl & 0x00000000FFFFFFFF);
             var xhi = xl >> FRACTIONAL_PLACES;
@@ -304,8 +304,8 @@ namespace FPMath
 
         public static fp operator /(fp x, fp y)
         {
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
+            var xl = x._rawValue;
+            var yl = y._rawValue;
 
             if (yl == 0)
             {
@@ -363,9 +363,9 @@ namespace FPMath
         public static fp operator %(fp x, fp y)
         {
             return new fp(
-                x.m_rawValue == MIN_VALUE & y.m_rawValue == -1 ?
+                x._rawValue == MIN_VALUE & y._rawValue == -1 ?
                 0 :
-                x.m_rawValue % y.m_rawValue);
+                x._rawValue % y._rawValue);
         }
 
         /// <summary>
@@ -374,42 +374,42 @@ namespace FPMath
         /// </summary>
         public static fp FastMod(fp x, fp y)
         {
-            return new fp(x.m_rawValue % y.m_rawValue);
+            return new fp(x._rawValue % y._rawValue);
         }
 
         public static fp operator -(fp x)
         {
-            return x.m_rawValue == MIN_VALUE ? MaxValue : new fp(-x.m_rawValue);
+            return x._rawValue == MIN_VALUE ? MaxValue : new fp(-x._rawValue);
         }
 
         public static bool operator ==(fp x, fp y)
         {
-            return x.m_rawValue == y.m_rawValue;
+            return x._rawValue == y._rawValue;
         }
 
         public static bool operator !=(fp x, fp y)
         {
-            return x.m_rawValue != y.m_rawValue;
+            return x._rawValue != y._rawValue;
         }
 
         public static bool operator >(fp x, fp y)
         {
-            return x.m_rawValue > y.m_rawValue;
+            return x._rawValue > y._rawValue;
         }
 
         public static bool operator <(fp x, fp y)
         {
-            return x.m_rawValue < y.m_rawValue;
+            return x._rawValue < y._rawValue;
         }
 
         public static bool operator >=(fp x, fp y)
         {
-            return x.m_rawValue >= y.m_rawValue;
+            return x._rawValue >= y._rawValue;
         }
 
         public static bool operator <=(fp x, fp y)
         {
-            return x.m_rawValue <= y.m_rawValue;
+            return x._rawValue <= y._rawValue;
         }
 
         /// <summary>
@@ -418,13 +418,13 @@ namespace FPMath
         /// </summary>
         internal static fp Pow2(fp x)
         {
-            if (x.m_rawValue == 0)
+            if (x._rawValue == 0)
             {
                 return One;
             }
 
             // Avoid negative arguments by exploiting that exp(-x) = 1/exp(x).
-            bool neg = x.m_rawValue < 0;
+            bool neg = x._rawValue < 0;
             if (neg)
             {
                 x = -x;
@@ -452,19 +452,19 @@ namespace FPMath
 
             int integerPart = (int)Floor(x);
             // Take fractional part of exponent
-            x = new fp(x.m_rawValue & 0x00000000FFFFFFFF);
+            x = new fp(x._rawValue & 0x00000000FFFFFFFF);
 
             var result = One;
             var term = One;
             int i = 1;
-            while (term.m_rawValue != 0)
+            while (term._rawValue != 0)
             {
                 term = FastMul(FastMul(x, term), Ln2) / (fp)i;
                 result += term;
                 i++;
             }
 
-            result = FromRaw(result.m_rawValue << integerPart);
+            result = FromRaw(result._rawValue << integerPart);
             if (neg)
             {
                 result = One / result;
@@ -482,7 +482,7 @@ namespace FPMath
         /// </exception>
         internal static fp Log2(fp x)
         {
-            if (x.m_rawValue <= 0)
+            if (x._rawValue <= 0)
             {
                 throw new ArgumentOutOfRangeException("Non-positive value passed to Ln", "x");
             }
@@ -494,7 +494,7 @@ namespace FPMath
             long b = 1U << (FRACTIONAL_PLACES - 1);
             long y = 0;
 
-            long rawX = x.m_rawValue;
+            long rawX = x._rawValue;
             while (rawX < ONE)
             {
                 rawX <<= 1;
@@ -512,9 +512,9 @@ namespace FPMath
             for (int i = 0; i < FRACTIONAL_PLACES; i++)
             {
                 z = FastMul(z, z);
-                if (z.m_rawValue >= (ONE << 1))
+                if (z._rawValue >= (ONE << 1))
                 {
-                    z = new fp(z.m_rawValue >> 1);
+                    z = new fp(z._rawValue >> 1);
                     y += b;
                 }
                 b >>= 1;
@@ -551,13 +551,13 @@ namespace FPMath
             {
                 return One;
             }
-            if (exp.m_rawValue == 0)
+            if (exp._rawValue == 0)
             {
                 return One;
             }
-            if (b.m_rawValue == 0)
+            if (b._rawValue == 0)
             {
-                if (exp.m_rawValue < 0)
+                if (exp._rawValue < 0)
                 {
                     throw new DivideByZeroException();
                 }
@@ -576,7 +576,7 @@ namespace FPMath
         /// </exception>
         public static fp Sqrt(fp x)
         {
-            var xl = x.m_rawValue;
+            var xl = x._rawValue;
             if (xl < 0)
             {
                 // We cannot represent infinities like Single and Double, and Sqrt is
@@ -652,7 +652,7 @@ namespace FPMath
         /// </summary>
         public static fp Sin(fp x)
         {
-            var clampedL = ClampSinValue(x.m_rawValue, out var flipHorizontal, out var flipVertical);
+            var clampedL = ClampSinValue(x._rawValue, out var flipHorizontal, out var flipVertical);
             var clamped = new fp(clampedL);
 
             // Find the two closest values in the LUT and perform linear interpolation
@@ -668,8 +668,8 @@ namespace FPMath
                 SinLut.Length - 1 - (int)roundedIndex - Sign(indexError) :
                 (int)roundedIndex + Sign(indexError)]);
 
-            var delta = FastMul(indexError, FastAbs(FastSub(nearestValue, secondNearestValue))).m_rawValue;
-            var interpolatedValue = nearestValue.m_rawValue + (flipHorizontal ? -delta : delta);
+            var delta = FastMul(indexError, FastAbs(FastSub(nearestValue, secondNearestValue)))._rawValue;
+            var interpolatedValue = nearestValue._rawValue + (flipHorizontal ? -delta : delta);
             var finalValue = flipVertical ? -interpolatedValue : interpolatedValue;
             return new fp(finalValue);
         }
@@ -681,7 +681,7 @@ namespace FPMath
         /// </summary>
         public static fp FastSin(fp x)
         {
-            var clampedL = ClampSinValue(x.m_rawValue, out bool flipHorizontal, out bool flipVertical);
+            var clampedL = ClampSinValue(x._rawValue, out bool flipHorizontal, out bool flipVertical);
 
             // Here we use the fact that the SinLut table has a number of entries
             // equal to (PI_OVER_2 >> 15) to use the angle to index directly into it
@@ -742,7 +742,7 @@ namespace FPMath
         /// </summary>
         public static fp Cos(fp x)
         {
-            var xl = x.m_rawValue;
+            var xl = x._rawValue;
             var rawAngle = xl + (xl > 0 ? -PI - PI_OVER_2 : PI_OVER_2);
             return Sin(new fp(rawAngle));
         }
@@ -753,7 +753,7 @@ namespace FPMath
         /// </summary>
         public static fp FastCos(fp x)
         {
-            var xl = x.m_rawValue;
+            var xl = x._rawValue;
             var rawAngle = xl + (xl > 0 ? -PI - PI_OVER_2 : PI_OVER_2);
             return FastSin(new fp(rawAngle));
         }
@@ -766,7 +766,7 @@ namespace FPMath
         /// </remarks>
         public static fp Tan(fp x)
         {
-            var clampedPi = x.m_rawValue % PI;
+            var clampedPi = x._rawValue % PI;
             var flip = false;
             if (clampedPi < 0)
             {
@@ -789,8 +789,8 @@ namespace FPMath
             var nearestValue = new fp(TanLut[(int)roundedIndex]);
             var secondNearestValue = new fp(TanLut[(int)roundedIndex + Sign(indexError)]);
 
-            var delta = FastMul(indexError, FastAbs(FastSub(nearestValue, secondNearestValue))).m_rawValue;
-            var interpolatedValue = nearestValue.m_rawValue + delta;
+            var delta = FastMul(indexError, FastAbs(FastSub(nearestValue, secondNearestValue)))._rawValue;
+            var interpolatedValue = nearestValue._rawValue + delta;
             var finalValue = flip ? -interpolatedValue : interpolatedValue;
             return new fp(finalValue);
         }
@@ -806,10 +806,10 @@ namespace FPMath
                 throw new ArgumentOutOfRangeException(nameof(x));
             }
 
-            if (x.m_rawValue == 0) return PiOver2;
+            if (x._rawValue == 0) return PiOver2;
 
             var result = Atan(Sqrt(One - x * x) / x);
-            return x.m_rawValue < 0 ? result + Pi : result;
+            return x._rawValue < 0 ? result + Pi : result;
         }
 
         /// <summary>
@@ -818,11 +818,11 @@ namespace FPMath
         /// </summary>
         public static fp Atan(fp z)
         {
-            if (z.m_rawValue == 0) return Zero;
+            if (z._rawValue == 0) return Zero;
 
             // Force positive values for argument
             // Atan(-z) = -Atan(z).
-            var neg = z.m_rawValue < 0;
+            var neg = z._rawValue < 0;
             if (neg)
             {
                 z = -z;
@@ -853,7 +853,7 @@ namespace FPMath
                 dividend += zSq2;
                 divisor += zSq12;
 
-                if (term.m_rawValue == 0) break;
+                if (term._rawValue == 0) break;
             }
 
             result = result * z / zSqPlusOne;
@@ -872,8 +872,8 @@ namespace FPMath
 
         public static fp Atan2(fp y, fp x)
         {
-            var yl = y.m_rawValue;
-            var xl = x.m_rawValue;
+            var yl = y._rawValue;
+            var xl = x._rawValue;
             if (xl == 0)
             {
                 if (yl > 0)
@@ -929,7 +929,7 @@ namespace FPMath
         }
         public static explicit operator long(fp value)
         {
-            return value.m_rawValue >> FRACTIONAL_PLACES;
+            return value._rawValue >> FRACTIONAL_PLACES;
         }
         public static explicit operator fp(float value)
         {
@@ -937,7 +937,7 @@ namespace FPMath
         }
         public static explicit operator float(fp value)
         {
-            return (float)value.m_rawValue / ONE;
+            return (float)value._rawValue / ONE;
         }
         public static explicit operator fp(double value)
         {
@@ -945,7 +945,7 @@ namespace FPMath
         }
         public static explicit operator double(fp value)
         {
-            return (double)value.m_rawValue / ONE;
+            return (double)value._rawValue / ONE;
         }
         public static explicit operator fp(decimal value)
         {
@@ -953,27 +953,27 @@ namespace FPMath
         }
         public static explicit operator decimal(fp value)
         {
-            return (decimal)value.m_rawValue / ONE;
+            return (decimal)value._rawValue / ONE;
         }
 
         public override bool Equals(object obj)
         {
-            return obj is fp && ((fp)obj).m_rawValue == m_rawValue;
+            return obj is fp && ((fp)obj)._rawValue == _rawValue;
         }
 
         public override int GetHashCode()
         {
-            return m_rawValue.GetHashCode();
+            return _rawValue.GetHashCode();
         }
 
         public bool Equals(fp other)
         {
-            return m_rawValue == other.m_rawValue;
+            return _rawValue == other._rawValue;
         }
 
         public int CompareTo(fp other)
         {
-            return m_rawValue.CompareTo(other.m_rawValue);
+            return _rawValue.CompareTo(other._rawValue);
         }
 
         public override string ToString()
@@ -1008,7 +1008,7 @@ namespace FPMath
                         writer.Write("            ");
                     }
                     var sin = Math.Sin(angle);
-                    var rawValue = ((fp)sin).m_rawValue;
+                    var rawValue = ((fp)sin)._rawValue;
                     writer.Write(string.Format("0x{0:X}L, ", rawValue));
                 }
                 writer.Write(
@@ -1044,7 +1044,7 @@ namespace FPMath
                     {
                         tan = (double)MaxValue;
                     }
-                    var rawValue = (((decimal)tan > (decimal)MaxValue || tan < 0.0) ? MaxValue : (fp)tan).m_rawValue;
+                    var rawValue = (((decimal)tan > (decimal)MaxValue || tan < 0.0) ? MaxValue : (fp)tan)._rawValue;
                     writer.Write(string.Format("0x{0:X}L, ", rawValue));
                 }
                 writer.Write(
@@ -1065,7 +1065,7 @@ namespace FPMath
         /// <summary>
         /// The underlying integer representation
         /// </summary>
-        public long RawValue => m_rawValue;
+        public long RawValue => _rawValue;
 
         /// <summary>
         /// This is the constructor from raw value; it can only be used interally.
@@ -1073,12 +1073,12 @@ namespace FPMath
         /// <param name="rawValue"></param>
         fp(long rawValue)
         {
-            m_rawValue = rawValue;
+            _rawValue = rawValue;
         }
 
         public fp(int value)
         {
-            m_rawValue = value * ONE;
+            _rawValue = value * ONE;
         }
     }
 }
