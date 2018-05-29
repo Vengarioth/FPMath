@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace FPMath
 {
+    [Serializable]
     public struct fp3 : IEquatable<fp3>
     {
         public static fp3 Zero { get { return new fp3(0, 0, 0); } }

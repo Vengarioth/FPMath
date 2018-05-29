@@ -46,6 +46,7 @@
     <Compile Include="fpSinLut.cs" />
     <Compile Include="fpTanLut.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ticks.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
